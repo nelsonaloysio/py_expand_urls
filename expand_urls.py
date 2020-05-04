@@ -3,9 +3,8 @@
 
 '''
 Expand shortened URLs present in a text file.
-Tested with python3-requests library version 2.23.0.
 
-usage: expand_urls.py [-h] [-o OUTPUT] [-v VERBOSE] input
+usage: expand_urls [-h] [-o OUTPUT] [-e ENCODING] [-v] input
 
 positional arguments:
   input                 input file name
@@ -14,22 +13,23 @@ optional arguments:
   -h, --help            show this help message and exit
   -o OUTPUT, --output OUTPUT
                         output file name
-  -v VERBOSE, --verbose VERBOSE
-                        print expanded URLs
+  -e ENCODING, --encoding ENCODING
+                        file encoding (default: utf-8)
+  -v, --verbose         print expanded URLs
 '''
 
 from argparse import ArgumentParser
-from collections import defaultdict
-from csv import reader, writer, QUOTE_MINIMAL
 from os.path import basename, splitext
 from re import findall
 
 from requests import head
 from requests.exceptions import ConnectionError
 
+ENCODING = 'utf-8'
+
 REGEX_URL = 'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
 
-def expand_urls(input_name, output_name=None, verbose=False):
+def expand_urls(input_name, output_name=None, encoding=ENCODING, verbose=False):
     '''
     Perform URL expansion.
     '''
@@ -43,8 +43,8 @@ def expand_urls(input_name, output_name=None, verbose=False):
 
     print('Expanding URLs...')
 
-    with open(input_name, 'rt', encoding='utf-8', errors='ignore') as input_file:
-        with open(output_name, 'w', newline='', encoding='utf8', errors='ignore') as output_file:
+    with open(input_name, 'rt', encoding=encoding, errors='ignore') as input_file:
+        with open(output_name, 'w', newline='', encoding=encoding, errors='ignore') as output_file:
             for line in input_file:
                 urls = findall(REGEX_URL, line)
                 if urls:
@@ -82,10 +82,12 @@ if __name__ == "__main__":
 
     parser.add_argument('input', action='store', help='input file name')
     parser.add_argument('-o', '--output', action='store', help='output file name')
+    parser.add_argument('-e', '--encoding', action='store', help='file encoding (default: %s)' % ENCODING)
     parser.add_argument('-v', '--verbose', action='store_true', help='print expanded URLs')
 
     args = parser.parse_args()
 
     expand_urls(args.input,
                 args.output,
+                args.encoding,
                 args.verbose)
